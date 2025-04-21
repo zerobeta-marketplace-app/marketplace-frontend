@@ -1,19 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useAppDispatch } from "../../redux/hooks";
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { loginUser } from "@/redux/user/authSlice";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<"buyer" | "seller">("buyer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const { loading, error, user } = useAppSelector((state) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(loginUser({ email, password, role: activeTab }));
   };
+
+  useEffect(() => {
+    if (user?.role === "seller") {
+      router.push("/seller/products");
+    } else if (user?.role === "buyer") {
+      router.push("/buyer/products");
+    }
+  }, [user, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -39,6 +51,8 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {error && <p className="text-red-500 text-sm mb-4 text-center">❌ {error}</p>}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium">Email</label>
@@ -63,8 +77,9 @@ export default function LoginPage() {
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            disabled={loading}
           >
-            Login as {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            {loading ? "Logging in..." : `Login as ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
           </button>
         </form>
       </div>

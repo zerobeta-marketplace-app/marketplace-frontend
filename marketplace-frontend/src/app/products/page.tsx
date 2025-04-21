@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "../../redux/product/productSlice";
+import { fetchAllProducts } from "../../redux/product/productSlice";
 import { RootState, AppDispatch } from "../../store/store";
 import { ProductCard } from "../../components/ProductCard";
 
@@ -11,7 +11,7 @@ export default function ProductsPage() {
   const { products, loading, error } = useSelector((state: RootState) => state.product);
 
   useEffect(() => {
-    dispatch(fetchProducts());
+    dispatch(fetchAllProducts());
   }, [dispatch]);
 
   return (

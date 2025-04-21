@@ -9,6 +9,17 @@ export interface Product {
   shortDescription: string;
   price: number;
   availableStock: number;
+  sellerCountry?: string;
+  sellerName?: string;
+}
+
+export interface buyersProducts {
+  id: number;
+  productCode: string;
+  productName: string;
+  shortDescription: string;
+  price: number;
+  availableStock: number;
   sellerName: string;
   sellerCountry: string;
 }
@@ -25,10 +36,28 @@ const initialState: ProductState = {
   error: null,
 };
 
-export const fetchProducts = createAsyncThunk<Product[]>(
-  'product/fetchProducts',
+export const fetchAllProducts  = createAsyncThunk<Product[]>(
+  'product/fetchAllProducts ',
   async () => {
-    const response = await axios.get('https://fakestoreapi.com/products'); // Replace with real API
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products`); // Replace with real API
+    console.log('All products:', response.data);
+    return response.data;
+  }
+);
+
+export const fetchSellerProducts = createAsyncThunk<Product[], number>(
+  'product/fetchSellerProducts',
+  async (sellerId) => {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products/seller/${sellerId}`);
+    console.log('Seller products:', response.data);
+    return response.data;
+  }
+);
+
+export const registerProduct = createAsyncThunk<Product, { sellerId: number; productData: Omit<Product, 'id'> }>(
+  'product/registerProduct',
+  async ({ sellerId, productData }) => {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products/${sellerId}`, productData);
     return response.data;
   }
 );
@@ -46,17 +75,23 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProducts.pending, (state) => {
+      .addCase(fetchAllProducts .pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
+      .addCase(fetchAllProducts .fulfilled, (state, action) => {
         state.loading = false;
         state.products = action.payload;
       })
-      .addCase(fetchProducts.rejected, (state, action) => {
+      .addCase(fetchAllProducts .rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch products';
+      })
+      .addCase(fetchSellerProducts.fulfilled, (state: ProductState, action: PayloadAction<Product[]>) => {
+        state.products = action.payload;
+      })
+      .addCase(registerProduct.fulfilled, (state: ProductState, action: PayloadAction<Product>) => {
+        state.products.push(action.payload);
       });
   },
 });

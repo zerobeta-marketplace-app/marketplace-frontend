@@ -1,5 +1,6 @@
+// src/redux/user/authSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState, LoginRequest, RegisterRequest } from '../../types/auth';
+import { AuthState, LoginRequest, RegisterRequest } from '@/types/auth';
 import authService from '@/services/authService';
 
 const initialState: AuthState = {
@@ -15,9 +16,17 @@ export const loginUser = createAsyncThunk(
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await authService.login(credentials);
-      return response.data;
+      const { access_token, user } = response.data.data;
+      return {
+        user: {
+          email: credentials.email,
+          role: credentials.role,
+          id: user.id,
+        },
+        token: access_token,
+      };
     } catch (err: any) {
-      return rejectWithValue(err.response.data.message || 'Login failed');
+      return rejectWithValue(err.response?.data?.message || 'Login failed');
     }
   }
 );
@@ -27,9 +36,15 @@ export const registerUser = createAsyncThunk(
   async (data: RegisterRequest, { rejectWithValue }) => {
     try {
       const response = await authService.register(data);
-      return response.data;
+      return {
+        user: {
+          email: data.email,
+          role: data.role,
+        },
+        token: response.data.access_token,
+      };
     } catch (err: any) {
-      return rejectWithValue(err.response.data.message || 'Registration failed');
+      return rejectWithValue(err.response?.data?.message || 'Registration failed');
     }
   }
 );
@@ -38,27 +53,29 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    logout: state => {
+    logout: (state) => {
       state.user = null;
       state.token = null;
     },
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(loginUser.pending, state => {
+      .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
+        console.log('Login user:', action.payload.user);
         state.token = action.payload.token;
       })
       .addCase(loginUser.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(registerUser.pending, state => {
+
+      .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })

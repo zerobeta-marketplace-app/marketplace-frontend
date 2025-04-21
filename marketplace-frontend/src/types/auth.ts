@@ -43,7 +43,7 @@ export interface LoginRequest {
   
   // Added AuthState export
   export interface AuthState {
-    user: { id: string; name: string; email: string } | null;
+    user: any;
     token: string | null;
     loading: boolean;
     error: string | null;
