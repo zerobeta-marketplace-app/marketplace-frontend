@@ -39,7 +39,8 @@ const initialState: ProductState = {
 export const fetchAllProducts  = createAsyncThunk<Product[]>(
   'product/fetchAllProducts ',
   async () => {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products`); // Replace with real API
+   // const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products`); // Replace with real API
+    const response = await axios.get(`http://localhost:3002/products`); // Replace with real API
     console.log('All products:', response.data);
     return response.data;
   }
@@ -48,7 +49,7 @@ export const fetchAllProducts  = createAsyncThunk<Product[]>(
 export const fetchSellerProducts = createAsyncThunk<Product[], number>(
   'product/fetchSellerProducts',
   async (sellerId) => {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products/seller/${sellerId}`);
+    const response = await axios.get(`http://localhost:3002/products/seller/${sellerId}`);
     console.log('Seller products:', response.data);
     return response.data;
   }
@@ -57,7 +58,7 @@ export const fetchSellerProducts = createAsyncThunk<Product[], number>(
 export const registerProduct = createAsyncThunk<Product, { sellerId: number; productData: Omit<Product, 'id'> }>(
   'product/registerProduct',
   async ({ sellerId, productData }) => {
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products/${sellerId}`, productData);
+    const response = await axios.post(`http://localhost:3002/products/${sellerId}`, productData);
     return response.data;
   }
 );

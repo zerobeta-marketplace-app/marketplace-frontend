@@ -2,6 +2,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { Product } from '../product/productSlice';
+import { RootState } from './../../store/store';
 
 interface CartItem {
   product: Product;
@@ -58,6 +59,36 @@ export const placeOrder = createAsyncThunk(
   }
 );
 
+export const checkoutOrder = createAsyncThunk(
+  'order/checkout',
+  async (_, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { cart } = state.order;
+    const { user } = state.auth;
+
+    if (!user?.email) return rejectWithValue("User email not found");
+
+    const orderItems = cart.map(item => ({
+      productId: item.product.id,
+      productName: item.product.productName,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
+
+    const orderPayload = {
+      buyerEmail: user.email,
+      items: orderItems,
+    };
+
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`, orderPayload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Checkout failed");
+    }
+  }
+);
+
 // 📦 Fetch orders for logged in buyer
 export const fetchOrders = createAsyncThunk<Order[]>('order/fetchOrders', async () => {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`);
@@ -69,6 +100,7 @@ const orderSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action: PayloadAction<CartItem>) => {
+      console.log('Adding to cart:', action.payload);
       const existing = state.cart.find(c => c.product.id === action.payload.product.id);
       if (existing) {
         existing.quantity += action.payload.quantity;
@@ -107,6 +139,18 @@ const orderSlice = createSlice({
       .addCase(placeOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to place order';
+      })
+      .addCase(checkoutOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkoutOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.cart = []; // clear cart after successful checkout
+      })
+      .addCase(checkoutOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       .addCase(fetchOrders.pending, (state) => {
         state.loading = true;
