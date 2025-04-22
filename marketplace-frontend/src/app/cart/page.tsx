@@ -14,10 +14,10 @@ export default function CartPage() {
     const result = await dispatch(checkoutOrder());
 
     if (checkoutOrder.fulfilled.match(result)) {
-      alert(`✅ Order placed successfully. Ref: ${result.payload.referenceNumber}`);
+      alert(` Order placed successfully. Ref: ${result.payload.referenceNumber}`);
       router.push('/orders');
     } else {
-      alert(`❌ ${result.payload}`);
+      alert(` ${result.payload}`);
     }
   };
 

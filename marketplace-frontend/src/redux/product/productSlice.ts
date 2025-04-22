@@ -39,8 +39,8 @@ const initialState: ProductState = {
 export const fetchAllProducts  = createAsyncThunk<Product[]>(
   'product/fetchAllProducts ',
   async () => {
-   // const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products`); // Replace with real API
-    const response = await axios.get(`http://localhost:3002/products`); // Replace with real API
+    //const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products`); 
+    const response = await axios.get(`http://localhost:3002/products`);
     console.log('All products:', response.data);
     return response.data;
   }

@@ -81,7 +81,7 @@ export const checkoutOrder = createAsyncThunk(
     };
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`, orderPayload);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders/checkout`, orderPayload);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Checkout failed");
@@ -89,11 +89,22 @@ export const checkoutOrder = createAsyncThunk(
   }
 );
 
-// 📦 Fetch orders for logged in buyer
-export const fetchOrders = createAsyncThunk<Order[]>('order/fetchOrders', async () => {
-  const response = await axios.get(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`);
-  return response.data;
-});
+
+export const fetchOrders = createAsyncThunk<
+  { data: Order[]; total: number; page: number; limit: number },
+  { page: number; buyer: string }
+>(
+  'order/fetchOrders',
+  async ({ page, buyer }) => {
+    console.log('Base URL:', process.env.NEXT_PUBLIC_ORDER_API_BASE_URL);
+
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`, {
+      params: { page, buyer }
+    });
+    return response.data;
+  }
+);
+
 
 const orderSlice = createSlice({
   name: 'order',
@@ -156,9 +167,11 @@ const orderSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchOrders.fulfilled, (state, action: PayloadAction<Order[]>) => {
+      .addCase(fetchOrders.fulfilled, (state, action) => {
         state.loading = false;
-        state.orders = action.payload;
+        state.orders = action.payload.data;
+        state.currentPage = action.payload.page;
+        state.totalPages = Math.ceil(action.payload.total / action.payload.limit);
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.loading = false;
