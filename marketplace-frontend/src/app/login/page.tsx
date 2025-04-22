@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { loginUser } from "@/redux/user/authSlice";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<"buyer" | "seller">("buyer");
@@ -82,6 +83,22 @@ export default function LoginPage() {
             {loading ? "Logging in..." : `Login as ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
           </button>
         </form>
+
+        {/* 👇 Registration Links */}
+        <div className="mt-4 text-center text-sm text-gray-600 space-y-1">
+          <p>
+            Don't have an account?{" "}
+            <Link href="/register/buyer" className="text-blue-600 hover:underline">
+              Register as Buyer
+            </Link>
+          </p>
+          <p>
+            Want to sell?{" "}
+            <Link href="/register/seller" className="text-blue-600 hover:underline">
+              Register as Seller
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

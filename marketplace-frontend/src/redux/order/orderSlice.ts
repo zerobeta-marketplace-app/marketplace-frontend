@@ -46,7 +46,9 @@ const initialState: OrderState = {
 // 🧾 Place order thunk
 export const placeOrder = createAsyncThunk(
   'order/placeOrder',
-  async (cart: CartItem[]) => {
+  async (cart: CartItem[], { getState }) => {
+    const token = (getState() as RootState).auth.token;
+
     const payload = {
       items: cart.map(item => ({
         productId: item.product.id,
@@ -54,10 +56,21 @@ export const placeOrder = createAsyncThunk(
         unitPrice: item.product.price,
       })),
     };
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`, payload);
+
+    const response = await axios.post(
+      `http://localhost:3001/orders`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     return response.data;
   }
 );
+
 
 export const checkoutOrder = createAsyncThunk(
   'order/checkout',
@@ -65,7 +78,7 @@ export const checkoutOrder = createAsyncThunk(
     const state = getState() as RootState;
     const { cart } = state.order;
     const { user } = state.auth;
-
+    const token = state.auth.token;
     if (!user?.email) return rejectWithValue("User email not found");
 
     const orderItems = cart.map(item => ({
@@ -81,7 +94,15 @@ export const checkoutOrder = createAsyncThunk(
     };
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders/checkout`, orderPayload);
+      const response = await axios.post(
+        `http://localhost:3001/orders`,
+        orderPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Checkout failed");
@@ -92,16 +113,25 @@ export const checkoutOrder = createAsyncThunk(
 
 export const fetchOrders = createAsyncThunk<
   { data: Order[]; total: number; page: number; limit: number },
-  { page: number; buyer: string }
+  { page: number; buyer: string },
+  { state: RootState }
 >(
   'order/fetchOrders',
-  async ({ page, buyer }) => {
-    console.log('Base URL:', process.env.NEXT_PUBLIC_ORDER_API_BASE_URL);
+  async ({ page, buyer }, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
 
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_ORDER_API_BASE_URL}/orders`, {
-      params: { page, buyer }
-    });
-    return response.data;
+      const response = await axios.get(`http://localhost:3001/orders`, {
+        params: { page, buyer },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
+    }
   }
 );
 

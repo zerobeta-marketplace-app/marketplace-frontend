@@ -36,32 +36,60 @@ const initialState: ProductState = {
   error: null,
 };
 
-export const fetchAllProducts  = createAsyncThunk<Product[]>(
-  'product/fetchAllProducts ',
-  async () => {
-    //const response = await axios.get(`${process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL}/products`); 
-    const response = await axios.get(`http://localhost:3002/products`);
-    console.log('All products:', response.data);
+export const fetchAllProducts = createAsyncThunk<Product[]>(
+  'product/fetchAllProducts',
+  async (_, { getState }) => {
+    const state: any = getState();
+    const token = state.auth.token;
+    const response = await axios.get(`http://localhost:3002/products`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   }
 );
 
 export const fetchSellerProducts = createAsyncThunk<Product[], number>(
   'product/fetchSellerProducts',
-  async (sellerId) => {
-    const response = await axios.get(`http://localhost:3002/products/seller/${sellerId}`);
-    console.log('Seller products:', response.data);
+  async (sellerId, {getState}) => {
+    const state: any = getState();
+    const token = state.auth.token;
+    const response = await axios.get(
+      `http://localhost:3002/products/seller/${sellerId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data;
   }
 );
 
-export const registerProduct = createAsyncThunk<Product, { sellerId: number; productData: Omit<Product, 'id'> }>(
+export const registerProduct = createAsyncThunk<
+  Product,
+  { sellerId: number; productData: Omit<Product, 'id'> }
+>(
   'product/registerProduct',
-  async ({ sellerId, productData }) => {
-    const response = await axios.post(`http://localhost:3002/products/${sellerId}`, productData);
+  async ({ sellerId, productData }, { getState }) => {
+    const state: any = getState();
+    const token = state.auth.token;
+
+    const response = await axios.post(
+      `http://localhost:3002/products/${sellerId}`,
+      productData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     return response.data;
   }
 );
+
 
 const productSlice = createSlice({
   name: 'product',
